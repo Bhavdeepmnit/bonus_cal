@@ -1,0 +1,184 @@
+{
+  "info": {
+    "name": "Leave Management",
+    "description": "Start the app first (port 8080). Set adminPassword in the collection Variables tab to ADMIN_PASSWORD from D:\\Java-learn\\.env. Run the folders in order on a fresh database. Each folder logs in (Basic Auth) as the right person.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "adminEmail", "value": "admin@company.com" },
+    { "key": "adminPassword", "value": "PASTE_ADMIN_PASSWORD_FROM_.env" },
+    { "key": "managerEmail", "value": "priya@company.com" },
+    { "key": "employeeEmail", "value": "ravi@company.com" },
+    { "key": "userPassword", "value": "Password1" },
+    { "key": "managerId", "value": "2" },
+    { "key": "employeeId", "value": "3" },
+    { "key": "leaveRequestId", "value": "1" },
+    { "key": "taskId", "value": "1" },
+    { "key": "year", "value": "2026" }
+  ],
+  "item": [
+    {
+      "name": "0. Public",
+      "auth": { "type": "noauth" },
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/actuator/health" } },
+        { "name": "ERROR - no login (401)", "request": { "method": "GET", "url": "{{baseUrl}}/api/employees/me" } }
+      ]
+    },
+    {
+      "name": "1. HR - employees, policies, holidays",
+      "auth": { "type": "basic", "basic": [
+        { "key": "username", "value": "{{adminEmail}}", "type": "string" },
+        { "key": "password", "value": "{{adminPassword}}", "type": "string" } ] },
+      "item": [
+        { "name": "Who am I", "request": { "method": "GET", "url": "{{baseUrl}}/api/employees/me" } },
+        {
+          "name": "Create manager",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('managerId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/employees",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"email\": \"{{managerEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\"\n}" }
+          }
+        },
+        {
+          "name": "Create employee (reports to manager, joined 2023)",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('employeeId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/employees",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"email\": \"{{employeeEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}},\n  \"joiningDate\": \"2023-04-01\"\n}" }
+          }
+        },
+        { "name": "List employees (paged)", "request": { "method": "GET", "url": "{{baseUrl}}/api/employees?page=0&size=20&sort=name" } },
+        {
+          "name": "Update employee",
+          "request": {
+            "method": "PUT", "url": "{{baseUrl}}/api/employees/{{employeeId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}}\n}" }
+          }
+        },
+        {
+          "name": "ERROR - own manager (400)",
+          "request": {
+            "method": "PUT", "url": "{{baseUrl}}/api/employees/{{managerId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\",\n  \"managerId\": {{managerId}}\n}" }
+          }
+        },
+        {
+          "name": "ERROR - invalid employee (400)",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/employees",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"password\": \"short\",\n  \"grade\": \"L9\",\n  \"role\": \"BOSS\"\n}" }
+          }
+        },
+        { "name": "ERROR - deactivate manager with reports (409)", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/employees/{{managerId}}" } },
+        { "name": "List policies", "request": { "method": "GET", "url": "{{baseUrl}}/api/policies" } },
+        {
+          "name": "Update policy 1",
+          "request": {
+            "method": "PUT", "url": "{{baseUrl}}/api/policies/1",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"annualQuota\": 10,\n  \"carryForwardLimit\": 3\n}" }
+          }
+        },
+        {
+          "name": "Add holiday",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/holidays",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"date\": \"2026-10-02\",\n  \"name\": \"Gandhi Jayanti\"\n}" }
+          }
+        },
+        { "name": "List holidays", "request": { "method": "GET", "url": "{{baseUrl}}/api/holidays?year={{year}}" } }
+      ]
+    },
+    {
+      "name": "2. Employee - apply for leave",
+      "auth": { "type": "basic", "basic": [
+        { "key": "username", "value": "{{employeeEmail}}", "type": "string" },
+        { "key": "password", "value": "{{userPassword}}", "type": "string" } ] },
+      "item": [
+        { "name": "My balance", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/balance?year={{year}}" } },
+        {
+          "name": "Apply CASUAL Mon-Fri (holiday on Fri -> 4 days)",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('leaveRequestId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-09-28\",\n  \"endDate\": \"2026-10-02\",\n  \"reason\": \"Family function\"\n}" }
+          }
+        },
+        {
+          "name": "Apply CASUAL 20 days (REJECTED_BY_POLICY)",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-11-02\",\n  \"endDate\": \"2026-11-27\"\n}" }
+          }
+        },
+        {
+          "name": "ERROR - weekend only (400)",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-10-10\",\n  \"endDate\": \"2026-10-11\"\n}" }
+          }
+        },
+        {
+          "name": "ERROR - overlapping dates (409)",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-09-29\",\n  \"endDate\": \"2026-09-29\"\n}" }
+          }
+        },
+        { "name": "My leave requests (paged)", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/my" } },
+        { "name": "ERROR - employee cannot approve (403)", "request": { "method": "GET", "url": "{{baseUrl}}/api/approvals/pending" } }
+      ]
+    },
+    {
+      "name": "3. Manager - approve",
+      "auth": { "type": "basic", "basic": [
+        { "key": "username", "value": "{{managerEmail}}", "type": "string" },
+        { "key": "password", "value": "{{userPassword}}", "type": "string" } ] },
+      "item": [
+        { "name": "My notifications", "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications?unreadOnly=true" } },
+        {
+          "name": "My pending approvals",
+          "event": [{ "listen": "test", "script": { "exec": ["const list = pm.response.json();", "if (Array.isArray(list) && list.length) pm.collectionVariables.set('taskId', list[0].id);"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/approvals/pending" }
+        },
+        { "name": "Team member balance", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/balance/{{employeeId}}?year={{year}}" } },
+        { "name": "Approve", "request": { "method": "PUT", "url": "{{baseUrl}}/api/approvals/{{taskId}}/decide?decision=APPROVED&comments=Enjoy" } },
+        { "name": "ERROR - decide again (409)", "request": { "method": "PUT", "url": "{{baseUrl}}/api/approvals/{{taskId}}/decide?decision=REJECTED" } },
+        { "name": "Mark all notifications read", "request": { "method": "PUT", "url": "{{baseUrl}}/api/notifications/read-all" } }
+      ]
+    },
+    {
+      "name": "4. Employee - after approval",
+      "auth": { "type": "basic", "basic": [
+        { "key": "username", "value": "{{employeeEmail}}", "type": "string" },
+        { "key": "password", "value": "{{userPassword}}", "type": "string" } ] },
+      "item": [
+        { "name": "My notifications", "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications" } },
+        { "name": "Leave request", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/{{leaveRequestId}}" } },
+        { "name": "My balance (used updated)", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/balance?year={{year}}" } },
+        { "name": "Summary", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/summary/{{employeeId}}?year={{year}}" } },
+        { "name": "Cancel the approved future leave", "request": { "method": "PUT", "url": "{{baseUrl}}/api/leave-requests/{{leaveRequestId}}/cancel" } },
+        {
+          "name": "Change my password",
+          "request": {
+            "method": "PUT", "url": "{{baseUrl}}/api/employees/me/password",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"{{userPassword}}\",\n  \"newPassword\": \"{{userPassword}}-new\"\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}
