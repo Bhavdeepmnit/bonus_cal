@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.security;
+package com.icici.leavemanagement.common.security;
 
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

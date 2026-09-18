@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.exception;
+package com.icici.leavemanagement.common.exception;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -8,10 +8,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.icici.leavemanagement.exception.ResourceNotFoundException;
+import com.icici.leavemanagement.common.exception.ResourceNotFoundException;
 import com.icici.leavemanagement.request.LeaveEvents;
 import com.icici.leavemanagement.request.LeaveRequest;
-import com.icici.leavemanagement.security.CurrentUser;
+import com.icici.leavemanagement.common.security.CurrentUser;
 
 import lombok.RequiredArgsConstructor;
 

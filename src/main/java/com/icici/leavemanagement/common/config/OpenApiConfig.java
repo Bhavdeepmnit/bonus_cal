@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.config;
+package com.icici.leavemanagement.common.config;
 
 import org.springframework.context.annotation.Configuration;
 
