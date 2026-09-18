@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.security;
+package com.icici.leavemanagement.common.security;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
-import com.icici.leavemanagement.exception.ErrorBody;
+import com.icici.leavemanagement.common.exception.ErrorBody;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

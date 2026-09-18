@@ -418,6 +418,41 @@ class LeaveManagementApiTests {
         send(get("/api/notifications?unreadOnly=true"), MANAGER).andExpect(jsonPath("$.content", hasSize(0)));
     }
 
+    // ================= US-10 reimbursements =================
+
+    @Test
+    void reimbursements_createViewUpdateAndDecision() throws Exception {
+        String request = "{\"travelType\":\"TRAIN\",\"source\":\"Jaipur\",\"destination\":\"Delhi\",\"amount\":1250.50}";
+        long reimbursementId = id(send(post("/api/reimbursements"), EMP, request)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.employeeId").value((int) empId))
+            .andExpect(jsonPath("$.employeeName").value("Ravi"))
+            .andExpect(jsonPath("$.status").value("PENDING")));
+
+        send(get("/api/reimbursements/" + reimbursementId), TEAMMATE).andExpect(status().isForbidden());
+        send(get("/api/reimbursements/" + reimbursementId), MANAGER).andExpect(status().isOk());
+        send(get("/api/reimbursements"), EMP).andExpect(jsonPath("$.content", hasSize(1)));
+
+        send(put("/api/reimbursements/" + reimbursementId), EMP,
+                "{\"travelType\":\"CAB\",\"source\":\"Jaipur\",\"destination\":\"Airport\",\"amount\":1500}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.travelType").value("CAB"))
+            .andExpect(jsonPath("$.amount").value(1500));
+
+        send(put("/api/reimbursements/" + reimbursementId + "/decision"), MANAGER, "{\"status\":\"APPROVED\"}")
+            .andExpect(status().isForbidden());
+        send(put("/api/reimbursements/" + reimbursementId + "/decision"), ADMIN, "{\"status\":\"APPROVED\"}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("APPROVED"));
+        send(delete("/api/reimbursements/" + reimbursementId), EMP).andExpect(status().isConflict());
+
+        send(post("/api/reimbursements"), EMP,
+                "{\"travelType\":\"\",\"source\":\"Jaipur\",\"destination\":\"Delhi\",\"amount\":0}")
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.fieldErrors.travelType").exists())
+            .andExpect(jsonPath("$.fieldErrors.amount").exists());
+    }
+
     // ================= US-9 error format =================
 
     @Test

@@ -16,17 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.icici.leavemanagement.employee.Employee;
 import com.icici.leavemanagement.employee.EmployeeService;
-import com.icici.leavemanagement.exception.ConflictException;
-import com.icici.leavemanagement.exception.InvalidRequestException;
-import com.icici.leavemanagement.exception.NotAllowedException;
-import com.icici.leavemanagement.exception.ResourceNotFoundException;
+import com.icici.leavemanagement.common.exception.ConflictException;
+import com.icici.leavemanagement.common.exception.InvalidRequestException;
+import com.icici.leavemanagement.common.exception.NotAllowedException;
+import com.icici.leavemanagement.common.exception.ResourceNotFoundException;
 import com.icici.leavemanagement.holiday.HolidayService;
 import com.icici.leavemanagement.holiday.WorkingDays;
 import com.icici.leavemanagement.policy.LeaveEvaluationResponse;
 import com.icici.leavemanagement.policy.LeavePolicy;
 import com.icici.leavemanagement.policy.LeavePolicyService;
 import com.icici.leavemanagement.policy.LeaveType;
-import com.icici.leavemanagement.security.CurrentUser;
+import com.icici.leavemanagement.common.security.CurrentUser;
 
 import lombok.RequiredArgsConstructor;
 

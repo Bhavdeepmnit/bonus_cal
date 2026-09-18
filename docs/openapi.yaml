@@ -22,6 +22,8 @@ tags:
   description: Manager decisions (tasks are created automatically)
 - name: 6. Notifications
   description: Notifications of the logged-in user
+- name: 8. Bonuses
+  description: Yearly bonus calculations from leave and reimbursement activity
 paths:
   /api/policies/{id}:
     put:
@@ -714,6 +716,34 @@ paths:
       responses:
         "200":
           description: OK
+  /api/bonuses/{employeeId}:
+    get:
+      tags:
+      - 8. Bonuses
+      summary: Calculate an employee's yearly bonus
+      operationId: calculate
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 3
+      - name: year
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+        example: 2026
+      responses:
+        "200":
+          description: Auditable bonus calculation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BonusResponse"
 components:
   schemas:
     UpdateLeavePolicyRequest:
@@ -1144,6 +1174,74 @@ components:
             $ref: "#/components/schemas/EmployeeResponse"
         page:
           $ref: "#/components/schemas/PageMetadata"
+    BonusResponse:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+          format: int64
+        year:
+          type: integer
+          format: int32
+        baseBonus:
+          type: number
+          format: double
+        appliedLeaveCount:
+          type: integer
+        approvedLeaveCount:
+          type: integer
+        approvedLeaveDays:
+          type: integer
+        rejectedLeaveCount:
+          type: integer
+        pendingLeaveCount:
+          type: integer
+        cancelledLeaveCount:
+          type: integer
+        reimbursementCount:
+          type: integer
+        approvedReimbursementCount:
+          type: integer
+        approvedReimbursementAmount:
+          type: number
+          format: double
+        pendingReimbursementCount:
+          type: integer
+        pendingReimbursementAmount:
+          type: number
+          format: double
+        rejectedReimbursementCount:
+          type: integer
+        rejectedReimbursementAmount:
+          type: number
+          format: double
+        appliedLeavePenalty:
+          type: number
+          format: double
+        approvedLeaveDayPenalty:
+          type: number
+          format: double
+        rejectedLeavePenalty:
+          type: number
+          format: double
+        pendingLeavePenalty:
+          type: number
+          format: double
+        reimbursementFrequencyPenalty:
+          type: number
+          format: double
+        approvedReimbursementReward:
+          type: number
+          format: double
+        pendingReimbursementPenalty:
+          type: number
+          format: double
+        rejectedReimbursementPenalty:
+          type: number
+          format: double
+        bonusAmount:
+          type: number
+          format: double
   securitySchemes:
     basicAuth:
       type: http

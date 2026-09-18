@@ -2,7 +2,7 @@ package com.icici.leavemanagement.approval;
 
 import org.springframework.stereotype.Component;
 
-import com.icici.leavemanagement.employee.PendingWorkChecker;
+import com.icici.leavemanagement.common.port.PendingWorkChecker;
 
 import lombok.RequiredArgsConstructor;
 

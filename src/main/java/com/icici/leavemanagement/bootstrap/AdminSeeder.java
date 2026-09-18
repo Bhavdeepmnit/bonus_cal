@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.employee;
+package com.icici.leavemanagement.bootstrap;
 
 import java.time.LocalDate;
 
@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import com.icici.leavemanagement.employee.Employee;
+import com.icici.leavemanagement.employee.EmployeeRepository;
+import com.icici.leavemanagement.employee.Role;
 
 import lombok.RequiredArgsConstructor;
 

@@ -12,8 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.icici.leavemanagement.exception.ConflictException;
-import com.icici.leavemanagement.exception.InvalidRequestException;
+import com.icici.leavemanagement.common.exception.ConflictException;
+import com.icici.leavemanagement.common.exception.InvalidRequestException;
 
 @ExtendWith(MockitoExtension.class)
 class LeavePolicyServiceTest {

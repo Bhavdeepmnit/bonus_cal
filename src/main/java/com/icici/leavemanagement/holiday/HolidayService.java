@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.icici.leavemanagement.exception.ConflictException;
-import com.icici.leavemanagement.exception.ResourceNotFoundException;
+import com.icici.leavemanagement.common.exception.ConflictException;
+import com.icici.leavemanagement.common.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 

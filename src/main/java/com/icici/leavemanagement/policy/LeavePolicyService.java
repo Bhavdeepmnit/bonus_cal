@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.icici.leavemanagement.exception.ConflictException;
-import com.icici.leavemanagement.exception.InvalidRequestException;
-import com.icici.leavemanagement.exception.ResourceNotFoundException;
+import com.icici.leavemanagement.common.exception.ConflictException;
+import com.icici.leavemanagement.common.exception.InvalidRequestException;
+import com.icici.leavemanagement.common.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 

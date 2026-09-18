@@ -14,9 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.icici.leavemanagement.exception.ConflictException;
-import com.icici.leavemanagement.exception.InvalidRequestException;
-import com.icici.leavemanagement.security.CurrentUser;
+import com.icici.leavemanagement.common.exception.ConflictException;
+import com.icici.leavemanagement.common.exception.InvalidRequestException;
+import com.icici.leavemanagement.common.port.PendingWorkChecker;
+import com.icici.leavemanagement.common.security.CurrentUser;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {

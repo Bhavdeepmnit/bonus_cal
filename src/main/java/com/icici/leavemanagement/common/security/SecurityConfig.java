@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.security;
+package com.icici.leavemanagement.common.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

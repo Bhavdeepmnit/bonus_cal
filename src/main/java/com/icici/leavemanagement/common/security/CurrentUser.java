@@ -1,4 +1,4 @@
-package com.icici.leavemanagement.security;
+package com.icici.leavemanagement.common.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.icici.leavemanagement.employee.Employee;
 import com.icici.leavemanagement.employee.EmployeeRepository;
-import com.icici.leavemanagement.exception.NotAllowedException;
+import com.icici.leavemanagement.common.exception.NotAllowedException;
 
 import lombok.RequiredArgsConstructor;
 

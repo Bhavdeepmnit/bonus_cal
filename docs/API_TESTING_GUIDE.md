@@ -1,6 +1,6 @@
 # API Testing Guide (Postman)
 
-This guide tests **every API**, step by step, in the right order, with the exact data to send and the result you should get. It covers **79 requests** in 8 phases:
+This guide tests **every API**, step by step, in the right order, with the exact data to send and the result you should get. It covers **80 requests** in 9 phases:
 
 | Phase | Logged in as | What it tests |
 |---|---|---|
@@ -12,8 +12,9 @@ This guide tests **every API**, step by step, in the right order, with the exact
 | 5 | Priya (manager) | Pending approvals, approve, reject, notifications |
 | 6 | Ravi (employee) | Results of the decisions, summary, cancel approved leave, change password |
 | 7 | HR admin | Oversight, deactivate an employee, error pages |
+| 8 | HR admin | Calculate the yearly bonus from leave and reimbursement history |
 
-The same steps, with the same numbers, are in the Postman collection `postman/leave-management.postman_collection.json`. Each request in it logs in as the right person, saves the IDs it creates, and **checks the result automatically**. The collection was verified: 79 requests and 112 checks, 0 failures.
+The same steps, with the same numbers, are in the Postman collection `postman/leave-management.postman_collection.json`. Each request in it logs in as the right person, saves the IDs it creates, and **checks the result automatically**. The collection contains 80 requests, including the bonus calculation check.
 
 ---
 
@@ -21,7 +22,7 @@ The same steps, with the same numbers, are in the Postman collection `postman/le
 
 ### 1. Start the app
 VS Code → Run and Debug → **Leave Management (MySQL)** → F5. Wait for `Started LeaveManagementApplication`.
-Check: open http://localhost:8080/actuator/health. It should show `{"status":"UP"}`.
+Check: open http://localhost:8081/actuator/health. It should show `{"status":"UP"}`.
 
 ### 2. Use a fresh database
 The expected IDs (2, 3, 4…) and numbers below assume the database contains **only the HR admin**. That is true right now. To start over later:
@@ -36,10 +37,15 @@ The expected IDs (2, 3, 4…) and numbers below assume the database contains **o
 
 ### 3. Import into Postman
 1. Postman → **Import** → select `D:\Java-learn\leave-management\postman\leave-management.postman_collection.json`.
-2. Click the collection → **Variables** tab → set **adminPassword** (Current value) to `ADMIN_PASSWORD` from `D:\Java-learn\.env` → **Save**.
+2. Click the collection → **Variables** tab and set these current values:
+  - `baseUrl`: `http://localhost:8081`
+  - `adminEmail`: `ADMIN_EMAIL` from `D:\Java-learn\.env`
+  - `adminPassword`: `ADMIN_PASSWORD` from `D:\Java-learn\.env`
+  - `bonusYear`: the year you want to calculate, for example `2026`
+  Then click **Save**.
 
 ### 4. Run it
-- **Run everything automatically:** right-click the collection → **Run collection** → **Run**. All 79 requests should show green ✅.
+- **Run everything automatically:** right-click the collection → **Run collection** → **Run**. All 80 requests should show green ✅.
 - **Run step by step:** open the requests in order (0.1, 0.2, …) and click **Send**. Each response has a **Test Results** tab that shows whether it passed.
 
 ### Logins used in this guide
@@ -54,7 +60,7 @@ All requests use **Authorization → Basic Auth** (username = email).
 | Sita Verma | EMPLOYEE (L1), reports to Priya | `sita@company.com` | `Sita@1234` | 1.4 |
 | Arjun Mehta | MANAGER (L2), reports to Priya | `arjun@company.com` | `Arjun@123` | 1.5 |
 
-**Base URL:** `http://localhost:8080`. For every request with a body, set **Body → raw → JSON** (Postman adds `Content-Type: application/json`).
+**Base URL:** `http://localhost:8081`. For every request with a body, set **Body → raw → JSON** (Postman adds `Content-Type: application/json`).
 
 **Dates used** (today is 17 Sep 2026; all leave dates are in the future):
 
@@ -78,7 +84,7 @@ In Postman: **Authorization → No Auth** (except step 0.3).
 | 0.2 | `GET /api/employees/me` | none | **401** `"message": "Login required: send a valid email and password (HTTP Basic auth)…"` |
 | 0.3 | `GET /api/employees/me` | `admin@company.com` / `wrong-password` | **401** (same message) |
 
-Also open **http://localhost:8080/swagger-ui.html** in a browser: this is the interactive API page.
+Also open **http://localhost:8081/swagger-ui.html** in a browser: this is the interactive API page.
 
 ---
 
@@ -374,6 +380,18 @@ More error cases you can try: `"startDate":"2026-12-30","endDate":"2027-01-02"` 
 
 ---
 
+## Phase 8 - HR: yearly bonus calculation
+
+**Login: HR admin.** Set the Postman collection variable `bonusYear` to the year you want to calculate.
+
+| Step | Request | Expected |
+|---|---|---|
+| 8.1 | `GET /api/bonuses/{{employeeId}}?year={{bonusYear}}` | **200** with leave counts, reimbursement counts and amounts, formula components, and `bonusAmount` |
+
+The endpoint includes `appliedLeaveCount`, `approvedLeaveCount`, `approvedLeaveDays`, `rejectedLeaveCount`, `pendingLeaveCount`, `cancelledLeaveCount`, reimbursement counts and amounts by status, and the final calculated bonus. The employee, their direct manager, or HR may view the report.
+
+---
+
 ## Check the data in MySQL Workbench
 
 After the run, refresh `leave_management_db` and run:
@@ -383,6 +401,7 @@ SELECT id, name, email, role, manager_id, active FROM employees;
 SELECT id, employee_id, leave_type, start_date, end_date, days, status, policy_remarks FROM leave_requests;
 SELECT id, leave_request_id, approver_id, status, comments, decided_at FROM approval_tasks;
 SELECT id, recipient_id, is_read, message FROM notifications ORDER BY id;
+SELECT id, employee_id, amount, status, created_at, updated_at FROM reimbursements ORDER BY id;
 SELECT * FROM holidays;
 ```
 You should see:
@@ -429,6 +448,7 @@ You should see:
 | 29 | GET | `/api/notifications?unreadOnly&page&size` | any | 3.18, 5.1 |
 | 30 | PUT | `/api/notifications/{id}/read` | owner | 5.12 |
 | 31 | PUT | `/api/notifications/read-all` | any | 5.13 |
+| 32 | GET | `/api/bonuses/{employeeId}?year` | self, manager, HR | 8.1 |
 
 ## Troubleshooting
 
