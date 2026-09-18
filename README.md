@@ -47,7 +47,7 @@ Tables are created and upgraded by **Flyway** from `src/main/resources/db/migrat
 3. **Settings:** `D:\Java-learn\.env` holds the values the app reads:
    ```
    DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD   # MySQL
-   ADMIN_EMAIL, ADMIN_PASSWORD                           # first HR login
+   ADMIN_EMAIL, ADMIN_PASSWORD                           # first HR login; ADMIN_PASSWORD is required outside the h2 profile
    ```
    The file is outside the repository and must never be committed.
 
