@@ -13,6 +13,8 @@ It started as three microservices (`leave-policy-service`, `leave-request-servic
 | Approvals | `approval` | `/api/approvals` |
 | Notifications | `notification` | `/api/notifications` |
 
+📐 **Design documentation:** [docs/DESIGN.md](docs/DESIGN.md) covers the agile backlog, use case diagram, process flows, state and sequence diagrams, ER diagram and data dictionary. Rendered images are in [docs/diagrams/](docs/diagrams/).
+
 Modules talk to each other through Spring events (`request/LeaveEvents`). For example, when leave is submitted, the approval module creates the manager's task and the notification module informs people, all in the same database transaction.
 
 ---
@@ -45,7 +47,7 @@ Tables are created and upgraded by **Flyway** from `src/main/resources/db/migrat
 3. **Settings:** `D:\Java-learn\.env` holds the values the app reads:
    ```
    DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD   # MySQL
-   ADMIN_EMAIL, ADMIN_PASSWORD                           # first HR login
+   ADMIN_EMAIL, ADMIN_PASSWORD                           # first HR login; ADMIN_PASSWORD is required outside the h2 profile
    ```
    The file is outside the repository and must never be committed.
 
@@ -71,7 +73,7 @@ There are 42 tests:
 - **Unit tests:** working-day counting, policy and carry-forward maths, manager and loop rules.
 - **API tests:** `LeaveManagementApiTests` covers every user story, including roles and error cases, on H2.
 
-**Postman:** import `postman/leave-management.postman_collection.json`, set `adminPassword` in the collection variables, and run folders 0 → 4 on a fresh database.
+**Postman:** follow [docs/API_TESTING_GUIDE.md](docs/API_TESTING_GUIDE.md). It covers all 79 requests, step by step, with the data to send and the expected results. Import `postman/leave-management.postman_collection.json`, set `adminPassword` in the collection variables, and run it on a fresh database.
 
 ---
 

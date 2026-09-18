@@ -1,181 +1,3113 @@
 {
   "info": {
-    "name": "Leave Management",
-    "description": "Start the app first (port 8080). Set adminPassword in the collection Variables tab to ADMIN_PASSWORD from D:\\Java-learn\\.env. Run the folders in order on a fresh database. Each folder logs in (Basic Auth) as the right person.",
+    "name": "Leave Management - full API test",
+    "description": "Run on a FRESH database, top to bottom (Collection Runner). Before running, set adminPassword to ADMIN_PASSWORD from D:\\Java-learn\\.env. Every request logs in as the right person, saves the ids it creates, and checks the status code. Step numbers match docs/API_TESTING_GUIDE.md.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "adminEmail", "value": "admin@company.com" },
-    { "key": "adminPassword", "value": "PASTE_ADMIN_PASSWORD_FROM_.env" },
-    { "key": "managerEmail", "value": "priya@company.com" },
-    { "key": "employeeEmail", "value": "ravi@company.com" },
-    { "key": "userPassword", "value": "Password1" },
-    { "key": "managerId", "value": "2" },
-    { "key": "employeeId", "value": "3" },
-    { "key": "leaveRequestId", "value": "1" },
-    { "key": "taskId", "value": "1" },
-    { "key": "year", "value": "2026" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@company.com"
+    },
+    {
+      "key": "adminPassword",
+      "value": "PASTE_ADMIN_PASSWORD_FROM_.env"
+    },
+    {
+      "key": "wrongPassword",
+      "value": "wrong-password"
+    },
+    {
+      "key": "managerEmail",
+      "value": "priya@company.com"
+    },
+    {
+      "key": "managerPassword",
+      "value": "Priya@123"
+    },
+    {
+      "key": "employeeEmail",
+      "value": "ravi@company.com"
+    },
+    {
+      "key": "employeePassword",
+      "value": "Ravi@1234"
+    },
+    {
+      "key": "employeeNewPassword",
+      "value": "Ravi@5678"
+    },
+    {
+      "key": "teammateEmail",
+      "value": "sita@company.com"
+    },
+    {
+      "key": "teammatePassword",
+      "value": "Sita@1234"
+    },
+    {
+      "key": "manager2Email",
+      "value": "arjun@company.com"
+    },
+    {
+      "key": "manager2Password",
+      "value": "Arjun@123"
+    },
+    {
+      "key": "managerId",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": ""
+    },
+    {
+      "key": "teammateId",
+      "value": ""
+    },
+    {
+      "key": "manager2Id",
+      "value": ""
+    },
+    {
+      "key": "casualL1PolicyId",
+      "value": ""
+    },
+    {
+      "key": "earnedL3PolicyId",
+      "value": ""
+    },
+    {
+      "key": "christmasHolidayId",
+      "value": ""
+    },
+    {
+      "key": "casualLeaveId",
+      "value": ""
+    },
+    {
+      "key": "sickLeaveId",
+      "value": ""
+    },
+    {
+      "key": "earnedLeaveId",
+      "value": ""
+    },
+    {
+      "key": "casualTaskId",
+      "value": ""
+    },
+    {
+      "key": "sickTaskId",
+      "value": ""
+    },
+    {
+      "key": "earnedTaskId",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    }
   ],
   "item": [
     {
-      "name": "0. Public",
-      "auth": { "type": "noauth" },
+      "name": "0. Public & login checks",
+      "description": "No login needed for health; the other two must fail with 401.",
       "item": [
-        { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/actuator/health" } },
-        { "name": "ERROR - no login (401)", "request": { "method": "GET", "url": "{{baseUrl}}/api/employees/me" } }
+        {
+          "name": "0.1 Health check (no login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"0.1: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = UP\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "0.2 ERROR no login -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"0.2: status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "0.3 ERROR wrong password -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"0.3: status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{wrongPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
       ]
     },
     {
-      "name": "1. HR - employees, policies, holidays",
-      "auth": { "type": "basic", "basic": [
-        { "key": "username", "value": "{{adminEmail}}", "type": "string" },
-        { "key": "password", "value": "{{adminPassword}}", "type": "string" } ] },
+      "name": "1. HR - employees",
+      "description": "Login: HR admin.",
       "item": [
-        { "name": "Who am I", "request": { "method": "GET", "url": "{{baseUrl}}/api/employees/me" } },
         {
-          "name": "Create manager",
-          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('managerId', pm.response.json().id);"] } }],
+          "name": "1.1 Who am I (HR admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.1: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".role = HR\", () => pm.expect(pm.response.json().role).to.eql(\"HR\"));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/employees",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"email\": \"{{managerEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\"\n}" }
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Create employee (reports to manager, joined 2023)",
-          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('employeeId', pm.response.json().id);"] } }],
+          "name": "1.2 Create manager Priya",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.2: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"managerId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/employees",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"email\": \"{{employeeEmail}}\",\n  \"password\": \"{{userPassword}}\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}},\n  \"joiningDate\": \"2023-04-01\"\n}" }
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"email\": \"{{managerEmail}}\",\n  \"password\": \"{{managerPassword}}\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
-        { "name": "List employees (paged)", "request": { "method": "GET", "url": "{{baseUrl}}/api/employees?page=0&size=20&sort=name" } },
         {
-          "name": "Update employee",
+          "name": "1.3 Create employee Ravi (joined 2023)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.3: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"employeeId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "PUT", "url": "{{baseUrl}}/api/employees/{{employeeId}}",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}}\n}" }
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"email\": \"{{employeeEmail}}\",\n  \"password\": \"{{employeePassword}}\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}},\n  \"joiningDate\": \"2023-04-01\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "ERROR - own manager (400)",
+          "name": "1.4 Create employee Sita (teammate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.4: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"teammateId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "PUT", "url": "{{baseUrl}}/api/employees/{{managerId}}",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\",\n  \"managerId\": {{managerId}}\n}" }
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sita Verma\",\n  \"email\": \"{{teammateEmail}}\",\n  \"password\": \"{{teammatePassword}}\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "ERROR - invalid employee (400)",
+          "name": "1.5 Create manager Arjun (reports to Priya)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.5: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"manager2Id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/employees",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"password\": \"short\",\n  \"grade\": \"L9\",\n  \"role\": \"BOSS\"\n}" }
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Arjun Mehta\",\n  \"email\": \"{{manager2Email}}\",\n  \"password\": \"{{manager2Password}}\",\n  \"grade\": \"L2\",\n  \"role\": \"MANAGER\",\n  \"managerId\": {{managerId}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
-        { "name": "ERROR - deactivate manager with reports (409)", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/employees/{{managerId}}" } },
-        { "name": "List policies", "request": { "method": "GET", "url": "{{baseUrl}}/api/policies" } },
         {
-          "name": "Update policy 1",
+          "name": "1.6 List employees (paged, sorted by name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.6: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"has page info\", () => pm.expect(pm.response.json().page).to.have.property(\"totalElements\"));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "PUT", "url": "{{baseUrl}}/api/policies/1",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"annualQuota\": 10,\n  \"carryForwardLimit\": 3\n}" }
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees?page=0&size=10&sort=name",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Add holiday",
+          "name": "1.7 Get employee Ravi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.7: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/holidays",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"date\": \"2026-10-02\",\n  \"name\": \"Gandhi Jayanti\"\n}" }
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/{{employeeId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
-        { "name": "List holidays", "request": { "method": "GET", "url": "{{baseUrl}}/api/holidays?year={{year}}" } }
+        {
+          "name": "1.8 Update employee Ravi (name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.8: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".name = Ravi Kumar Singh\", () => pm.expect(pm.response.json().name).to.eql(\"Ravi Kumar Singh\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/employees/{{employeeId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ravi Kumar Singh\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.9 ERROR invalid fields -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.9: status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"lists 5 fieldErrors\", () => pm.expect(Object.keys(pm.response.json().fieldErrors)).to.have.length(5));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"password\": \"123\",\n  \"grade\": \"L9\",\n  \"role\": \"BOSS\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.10 ERROR duplicate email -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.10: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Copy\",\n  \"email\": \"RAVI@company.com\",\n  \"password\": \"Password1\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{managerId}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.11 ERROR manager with EMPLOYEE role -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.11: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nobody\",\n  \"email\": \"nobody@company.com\",\n  \"password\": \"Password1\",\n  \"grade\": \"L1\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": {{employeeId}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.12 ERROR own manager -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.12: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/employees/{{managerId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\",\n  \"managerId\": {{managerId}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.13 ERROR reporting loop -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.13: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/employees/{{managerId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"grade\": \"L3\",\n  \"role\": \"MANAGER\",\n  \"managerId\": {{manager2Id}}\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.14 ERROR deactivate manager with reports -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.14: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/employees/{{managerId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.15 ERROR unknown employee -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"1.15: status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/999999",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
       ]
     },
     {
-      "name": "2. Employee - apply for leave",
-      "auth": { "type": "basic", "basic": [
-        { "key": "username", "value": "{{employeeEmail}}", "type": "string" },
-        { "key": "password", "value": "{{userPassword}}", "type": "string" } ] },
+      "name": "2. HR - policies & holidays",
+      "description": "Login: HR admin.",
       "item": [
-        { "name": "My balance", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/balance?year={{year}}" } },
         {
-          "name": "Apply CASUAL Mon-Fri (holiday on Fri -> 4 days)",
-          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('leaveRequestId', pm.response.json().id);"] } }],
+          "name": "2.1 List policies (9 seeded)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.1: status is 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"9 policies\", () => pm.expect(list).to.have.length(9));",
+                  "pm.collectionVariables.set(\"casualL1PolicyId\", list.find(p => p.grade === \"L1\" && p.leaveType === \"CASUAL\").id);",
+                  "pm.collectionVariables.set(\"earnedL3PolicyId\", list.find(p => p.grade === \"L3\" && p.leaveType === \"EARNED\").id);"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-09-28\",\n  \"endDate\": \"2026-10-02\",\n  \"reason\": \"Family function\"\n}" }
+            "method": "GET",
+            "url": "{{baseUrl}}/api/policies",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Apply CASUAL 20 days (REJECTED_BY_POLICY)",
+          "name": "2.2 ERROR duplicate policy -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.2: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-11-02\",\n  \"endDate\": \"2026-11-27\"\n}" }
+            "method": "POST",
+            "url": "{{baseUrl}}/api/policies",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"grade\": \"L1\",\n  \"annualQuota\": 12,\n  \"carryForwardLimit\": 2\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "ERROR - weekend only (400)",
+          "name": "2.3 Update CASUAL/L1 policy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.3: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".annualQuota = 10\", () => pm.expect(pm.response.json().annualQuota).to.eql(10));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-10-10\",\n  \"endDate\": \"2026-10-11\"\n}" }
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/policies/{{casualL1PolicyId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annualQuota\": 10,\n  \"carryForwardLimit\": 3\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "ERROR - overlapping dates (409)",
+          "name": "2.4 Delete EARNED/L3 policy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.4: status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "POST", "url": "{{baseUrl}}/api/leave-requests",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-09-29\",\n  \"endDate\": \"2026-09-29\"\n}" }
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/policies/{{earnedL3PolicyId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
-        { "name": "My leave requests (paged)", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/my" } },
-        { "name": "ERROR - employee cannot approve (403)", "request": { "method": "GET", "url": "{{baseUrl}}/api/approvals/pending" } }
+        {
+          "name": "2.5 Create EARNED/L3 policy again",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.5: status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/policies",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"EARNED\",\n  \"grade\": \"L3\",\n  \"annualQuota\": 21,\n  \"carryForwardLimit\": 8\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.6 Evaluate: 12 days fits",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.6: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".approved = true\", () => pm.expect(pm.response.json().approved).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/policies/evaluate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"L1\",\n  \"leaveType\": \"CASUAL\",\n  \"requestedDays\": 12,\n  \"alreadyUsedDays\": 0,\n  \"carriedForwardDays\": 3\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.7 Evaluate: 14 days does not fit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.7: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".approved = false\", () => pm.expect(pm.response.json().approved).to.eql(false));",
+                  "pm.test(\".reason = Requested 14 days but only 13 remaining\", () => pm.expect(pm.response.json().reason).to.eql(\"Requested 14 days but only 13 remaining\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/policies/evaluate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"L1\",\n  \"leaveType\": \"CASUAL\",\n  \"requestedDays\": 14,\n  \"alreadyUsedDays\": 0,\n  \"carriedForwardDays\": 3\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.8 Add holiday 2 Oct 2026",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.8: status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/holidays",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-10-02\",\n  \"name\": \"Gandhi Jayanti\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.9 Add holiday 25 Dec 2026",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.9: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"christmasHolidayId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/holidays",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-12-25\",\n  \"name\": \"Christmas\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.10 ERROR duplicate holiday -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.10: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/holidays",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-10-02\",\n  \"name\": \"Duplicate\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.11 List holidays 2026",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.11: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"2 holidays\", () => pm.expect(pm.response.json()).to.have.length(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/holidays?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.12 Delete Christmas holiday",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"2.12: status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/holidays/{{christmasHolidayId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
       ]
     },
     {
-      "name": "3. Manager - approve",
-      "auth": { "type": "basic", "basic": [
-        { "key": "username", "value": "{{managerEmail}}", "type": "string" },
-        { "key": "password", "value": "{{userPassword}}", "type": "string" } ] },
+      "name": "3. Employee Ravi - apply for leave",
+      "description": "Login: Ravi.",
       "item": [
-        { "name": "My notifications", "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications?unreadOnly=true" } },
         {
-          "name": "My pending approvals",
-          "event": [{ "listen": "test", "script": { "exec": ["const list = pm.response.json();", "if (Array.isArray(list) && list.length) pm.collectionVariables.set('taskId', list[0].id);"] } }],
-          "request": { "method": "GET", "url": "{{baseUrl}}/api/approvals/pending" }
+          "name": "3.1 Who am I (Ravi)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.1: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         },
-        { "name": "Team member balance", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/balance/{{employeeId}}?year={{year}}" } },
-        { "name": "Approve", "request": { "method": "PUT", "url": "{{baseUrl}}/api/approvals/{{taskId}}/decide?decision=APPROVED&comments=Enjoy" } },
-        { "name": "ERROR - decide again (409)", "request": { "method": "PUT", "url": "{{baseUrl}}/api/approvals/{{taskId}}/decide?decision=REJECTED" } },
-        { "name": "Mark all notifications read", "request": { "method": "PUT", "url": "{{baseUrl}}/api/notifications/read-all" } }
+        {
+          "name": "3.2 Balance before applying",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.2: status is 200\", () => pm.response.to.have.status(200));",
+                  "const casual = pm.response.json().find(b => b.leaveType === \"CASUAL\");",
+                  "pm.test(\"CASUAL 10 + 3 carried = 13\", () => pm.expect(casual.remaining).to.eql(13));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/balance?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3 Apply CASUAL 28 Sep - 2 Oct (4 working days)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.3: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\".status = PENDING\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+                  "pm.test(\".days = 4\", () => pm.expect(pm.response.json().days).to.eql(4));",
+                  "pm.collectionVariables.set(\"casualLeaveId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-09-28\",\n  \"endDate\": \"2026-10-02\",\n  \"reason\": \"Family function\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.4 Apply CASUAL 2-27 Nov (over quota)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.4: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\".status = REJECTED_BY_POLICY\", () => pm.expect(pm.response.json().status).to.eql(\"REJECTED_BY_POLICY\"));",
+                  "pm.test(\".policyRemarks = Requested 20 days but only 9 remaining\", () => pm.expect(pm.response.json().policyRemarks).to.eql(\"Requested 20 days but only 9 remaining\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startDate\": \"2026-11-02\",\n  \"endDate\": \"2026-11-27\",\n  \"reason\": \"Long trip\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.5 Apply SICK 12 Oct (will be cancelled)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.5: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\".status = PENDING\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+                  "pm.collectionVariables.set(\"sickLeaveId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-10-12\",\n  \"endDate\": \"2026-10-12\",\n  \"reason\": \"Doctor visit\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.6 Apply EARNED 19-20 Oct (will be rejected)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.6: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\".status = PENDING\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+                  "pm.collectionVariables.set(\"earnedLeaveId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"EARNED\",\n  \"startDate\": \"2026-10-19\",\n  \"endDate\": \"2026-10-20\",\n  \"reason\": \"Personal work\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.7 ERROR weekend only -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.7: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-10-10\",\n  \"endDate\": \"2026-10-11\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.8 ERROR overlapping dates -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.8: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-09-29\",\n  \"endDate\": \"2026-09-29\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.9 ERROR end before start -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.9: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-10-15\",\n  \"endDate\": \"2026-10-14\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.10 ERROR unknown leave type -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.10: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/leave-requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"VACATION\",\n  \"startDate\": \"2026-10-15\",\n  \"endDate\": \"2026-10-15\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.11 My leave requests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.11: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"4 requests\", () => pm.expect(pm.response.json().content).to.have.length(4));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/my",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.12 Get one leave request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.12: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/{{casualLeaveId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.13 Cancel the SICK request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.13: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/leave-requests/{{sickLeaveId}}/cancel",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.14 ERROR cancel again -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.14: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/leave-requests/{{sickLeaveId}}/cancel",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.15 Balance with pending days",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.15: status is 200\", () => pm.response.to.have.status(200));",
+                  "const casual = pm.response.json().find(b => b.leaveType === \"CASUAL\");",
+                  "pm.test(\"CASUAL pending 4, remaining 9\", () => { pm.expect(casual.pending).to.eql(4); pm.expect(casual.remaining).to.eql(9); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/balance?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.16 ERROR employee opens approvals -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.16: status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/approvals/pending",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.17 ERROR employee lists employees -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.17: status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.18 My notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"3.18: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
       ]
     },
     {
-      "name": "4. Employee - after approval",
-      "auth": { "type": "basic", "basic": [
-        { "key": "username", "value": "{{employeeEmail}}", "type": "string" },
-        { "key": "password", "value": "{{userPassword}}", "type": "string" } ] },
+      "name": "4. Teammate Sita - privacy checks",
+      "description": "Login: Sita. She must not see or cancel the leave of Ravi.",
       "item": [
-        { "name": "My notifications", "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications" } },
-        { "name": "Leave request", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/{{leaveRequestId}}" } },
-        { "name": "My balance (used updated)", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/balance?year={{year}}" } },
-        { "name": "Summary", "request": { "method": "GET", "url": "{{baseUrl}}/api/leave-requests/summary/{{employeeId}}?year={{year}}" } },
-        { "name": "Cancel the approved future leave", "request": { "method": "PUT", "url": "{{baseUrl}}/api/leave-requests/{{leaveRequestId}}/cancel" } },
         {
-          "name": "Change my password",
+          "name": "4.1 ERROR view teammate leave -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"4.1: status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "PUT", "url": "{{baseUrl}}/api/employees/me/password",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"{{userPassword}}\",\n  \"newPassword\": \"{{userPassword}}-new\"\n}" }
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/{{casualLeaveId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{teammateEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{teammatePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.2 ERROR cancel teammate leave -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"4.2: status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/leave-requests/{{casualLeaveId}}/cancel",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{teammateEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{teammatePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Manager Priya - approve",
+      "description": "Login: Priya (step 5.8 logs in as Arjun).",
+      "item": [
+        {
+          "name": "5.1 Unread notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.1: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"notificationId\", pm.response.json().content.slice(-1)[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications?unreadOnly=true",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.2 My pending approvals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.2: status is 200\", () => pm.response.to.have.status(200));",
+                  "const tasks = pm.response.json();",
+                  "pm.test(\"2 pending tasks\", () => pm.expect(tasks).to.have.length(2));",
+                  "const casualTask = tasks.find(t => t.leaveRequestId == pm.collectionVariables.get(\"casualLeaveId\"));",
+                  "const earnedTask = tasks.find(t => t.leaveRequestId == pm.collectionVariables.get(\"earnedLeaveId\"));",
+                  "pm.collectionVariables.set(\"casualTaskId\", casualTask.id);",
+                  "pm.collectionVariables.set(\"earnedTaskId\", earnedTask.id);",
+                  "// tasks are created in order CASUAL, SICK, EARNED, so the cancelled SICK task id is between them",
+                  "pm.collectionVariables.set(\"sickTaskId\", casualTask.id + 1);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/approvals/pending",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.3 Cancelled task (SICK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.3: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/approvals/{{sickTaskId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.4 My team",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.4: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.5 Leave requests of Ravi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.5: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/employee/{{employeeId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.6 Balance of Ravi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.6: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/balance/{{employeeId}}?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.7 ERROR invalid decision -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.7: status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/approvals/{{casualTaskId}}/decide?decision=MAYBE",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.8 ERROR other manager (Arjun) decides -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.8: status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/approvals/{{casualTaskId}}/decide?decision=APPROVED",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{manager2Email}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{manager2Password}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.9 Approve CASUAL leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.9: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = APPROVED\", () => pm.expect(pm.response.json().status).to.eql(\"APPROVED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/approvals/{{casualTaskId}}/decide?decision=APPROVED&comments=Enjoy your time",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.10 Reject EARNED leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.10: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = REJECTED\", () => pm.expect(pm.response.json().status).to.eql(\"REJECTED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/approvals/{{earnedTaskId}}/decide?decision=REJECTED&comments=Project deadline",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.11 ERROR decide again -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.11: status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/approvals/{{casualTaskId}}/decide?decision=REJECTED",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.12 Mark one notification read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.12: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".read = true\", () => pm.expect(pm.response.json().read).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.13 Mark all notifications read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"5.13: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/notifications/read-all",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{managerEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{managerPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Employee Ravi - after the decisions",
+      "description": "Login: Ravi (step 6.9 uses the new password).",
+      "item": [
+        {
+          "name": "6.1 Notifications (approved / rejected)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.1: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"latest says REJECTED\", () => pm.expect(pm.response.json().content[0].message).to.include(\"REJECTED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.2 CASUAL request is APPROVED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.2: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = APPROVED\", () => pm.expect(pm.response.json().status).to.eql(\"APPROVED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/{{casualLeaveId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.3 Balance: 4 CASUAL days used",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.3: status is 200\", () => pm.response.to.have.status(200));",
+                  "const casual = pm.response.json().find(b => b.leaveType === \"CASUAL\");",
+                  "pm.test(\"used 4, remaining 9\", () => { pm.expect(casual.used).to.eql(4); pm.expect(casual.remaining).to.eql(9); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/balance?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.4 Yearly summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.4: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".rejectedCount = 2\", () => pm.expect(pm.response.json().rejectedCount).to.eql(2));",
+                  "pm.test(\".unapprovedCount = 0\", () => pm.expect(pm.response.json().unapprovedCount).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/summary/{{employeeId}}?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.5 Cancel approved future leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.5: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\".status = CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/leave-requests/{{casualLeaveId}}/cancel",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.6 Balance: days given back",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.6: status is 200\", () => pm.response.to.have.status(200));",
+                  "const casual = pm.response.json().find(b => b.leaveType === \"CASUAL\");",
+                  "pm.test(\"remaining back to 13\", () => pm.expect(casual.remaining).to.eql(13));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/balance?year=2026",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.7 Change my password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.7: status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/employees/me/password",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{employeePassword}}\",\n  \"newPassword\": \"{{employeeNewPassword}}\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.8 ERROR old password -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.8: status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.9 New password works",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"6.9: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeeNewPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. HR - oversight & final checks",
+      "description": "Login: HR admin (7.4 logs in as Sita, 7.7 needs no login).",
+      "item": [
+        {
+          "name": "7.1 HR views any approval task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.1: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/approvals/{{casualTaskId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.2 HR views leave of any employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.2: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/leave-requests/employee/{{employeeId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.3 Deactivate Sita",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.3: status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/employees/{{teammateId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.4 ERROR deactivated user logs in -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.4: status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employees/me",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{teammateEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{teammatePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.5 ERROR unknown URL -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.5: status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/nothing-here",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.6 ERROR wrong HTTP method -> 405",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.6: status is 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/leave-requests/my",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.7 OpenAPI docs (no login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"7.7: status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v3/api-docs",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            }
           }
         }
       ]

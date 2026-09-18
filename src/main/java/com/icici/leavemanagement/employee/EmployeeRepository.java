@@ -16,7 +16,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     boolean existsByEmailIgnoreCase(String email);
 
-    boolean existsByRole(Role role);
+    boolean existsByRoleAndActiveTrue(Role role);
 
     long countByRoleAndActiveTrue(Role role);
 

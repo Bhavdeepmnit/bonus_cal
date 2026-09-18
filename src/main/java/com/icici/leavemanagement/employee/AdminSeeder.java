@@ -28,7 +28,7 @@ public class AdminSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (repository.existsByRole(Role.HR)) {
+        if (repository.existsByRoleAndActiveTrue(Role.HR)) {
             return;
         }
         Employee admin = new Employee();
