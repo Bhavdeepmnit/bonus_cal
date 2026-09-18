@@ -119,6 +119,9 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {
+        if (status.is4xxClientError()) {
+            log.warn("API error status={} message={}", status.value(), message);
+        }
         return ResponseEntity.status(status).body(ErrorBody.of(status, message));
     }
 }

@@ -104,6 +104,10 @@ There are 44 tests:
 
 **Postman:** follow [docs/API_TESTING_GUIDE.md](docs/API_TESTING_GUIDE.md). It covers all 80 requests, step by step, with the data to send and the expected results. Import `postman/leave-management.postman_collection.json`, set the required variables, and run it on a fresh database.
 
+### Application logs
+
+Application logs are written to `logs/leave-management.log` and also shown in the console. The log file rotates at 10 MB, keeps 30 historical files, and caps the total log size at 500 MB. Each request includes an `X-Request-Id` value in the response and log entries include the request ID, authenticated user, HTTP method, URL, status, and duration. Client failures are logged as warnings and server failures as errors. Do not log passwords, authorization headers, or request bodies containing sensitive data.
+
 ---
 
 ## 7. Security and roles
