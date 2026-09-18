@@ -1,6 +1,6 @@
 # API Testing Guide (Postman)
 
-This guide tests **every API**, step by step, in the right order, with the exact data to send and the result you should get. It covers **80 requests** in 9 phases:
+This guide tests **every API**, step by step, in the right order, with the exact data to send and the result you should get. It covers **84 requests** in 10 phases:
 
 | Phase | Logged in as | What it tests |
 |---|---|---|
@@ -12,9 +12,10 @@ This guide tests **every API**, step by step, in the right order, with the exact
 | 5 | Priya (manager) | Pending approvals, approve, reject, notifications |
 | 6 | Ravi (employee) | Results of the decisions, summary, cancel approved leave, change password |
 | 7 | HR admin | Oversight, deactivate an employee, error pages |
-| 8 | HR admin | Calculate the yearly bonus from leave and reimbursement history |
+| 8 | Ravi then HR admin | Create, view and approve a reimbursement |
+| 9 | HR admin | Calculate the yearly bonus from leave and reimbursement history |
 
-The same steps, with the same numbers, are in the Postman collection `postman/leave-management.postman_collection.json`. Each request in it logs in as the right person, saves the IDs it creates, and **checks the result automatically**. The collection contains 80 requests, including the bonus calculation check.
+The same steps, with the same numbers, are in the Postman collection `postman/leave-management.postman_collection.json`. Each request in it logs in as the right person, saves the IDs it creates, and **checks the result automatically**. The collection contains 84 requests, including reimbursement and bonus calculation checks.
 
 ---
 
@@ -42,10 +43,12 @@ The expected IDs (2, 3, 4…) and numbers below assume the database contains **o
   - `adminEmail`: `ADMIN_EMAIL` from `D:\Java-learn\.env`
   - `adminPassword`: `ADMIN_PASSWORD` from `D:\Java-learn\.env`
   - `bonusYear`: the year you want to calculate, for example `2026`
+  - `basicAuthUsername`: optional helper value for manual requests; use the credentials required by the operation
+  - `basicAuthPassword`: optional helper value for manual requests; use the credentials required by the operation
   Then click **Save**.
 
 ### 4. Run it
-- **Run everything automatically:** right-click the collection → **Run collection** → **Run**. All 80 requests should show green ✅.
+- **Run everything automatically:** right-click the collection → **Run collection** → **Run**. All 84 requests should show green ✅.
 - **Run step by step:** open the requests in order (0.1, 0.2, …) and click **Send**. Each response has a **Test Results** tab that shows whether it passed.
 
 ### Logins used in this guide
@@ -380,13 +383,24 @@ More error cases you can try: `"startDate":"2026-12-30","endDate":"2027-01-02"` 
 
 ---
 
-## Phase 8 - HR: yearly bonus calculation
+## Phase 8 - Reimbursements
+
+The employee creates the request; HR approves or rejects it. A manager may view direct-report reimbursements but cannot decide them.
+
+| Step | Request | Expected |
+|---|---|---|
+| 8.1 | `POST /api/reimbursements` as Ravi | **201** and save `reimbursementId` |
+| 8.2 | `GET /api/reimbursements` as Ravi | **200** with the new request in `content` and status `PENDING` |
+| 8.3 | `GET /api/reimbursements/{{reimbursementId}}` as HR | **200** |
+| 8.4 | `PUT /api/reimbursements/{{reimbursementId}}/decision` as HR with `{"status":"APPROVED"}` | **200** with status `APPROVED` |
+
+## Phase 9 - HR: yearly bonus calculation
 
 **Login: HR admin.** Set the Postman collection variable `bonusYear` to the year you want to calculate.
 
 | Step | Request | Expected |
 |---|---|---|
-| 8.1 | `GET /api/bonuses/{{employeeId}}?year={{bonusYear}}` | **200** with leave counts, reimbursement counts and amounts, formula components, and `bonusAmount` |
+| 9.1 | `GET /api/bonuses/{{employeeId}}?year={{bonusYear}}` | **200** with leave counts, reimbursement counts and amounts, formula components, and `bonusAmount` |
 
 The endpoint includes `appliedLeaveCount`, `approvedLeaveCount`, `approvedLeaveDays`, `rejectedLeaveCount`, `pendingLeaveCount`, `cancelledLeaveCount`, reimbursement counts and amounts by status, and the final calculated bonus. The employee, their direct manager, or HR may view the report.
 
@@ -448,7 +462,13 @@ You should see:
 | 29 | GET | `/api/notifications?unreadOnly&page&size` | any | 3.18, 5.1 |
 | 30 | PUT | `/api/notifications/{id}/read` | owner | 5.12 |
 | 31 | PUT | `/api/notifications/read-all` | any | 5.13 |
-| 32 | GET | `/api/bonuses/{employeeId}?year` | self, manager, HR | 8.1 |
+| 32 | POST | `/api/reimbursements` | any | 8.1 |
+| 33 | GET | `/api/reimbursements?page&size&sort` | self, manager, HR | 8.2 |
+| 34 | GET | `/api/reimbursements/{id}` | self, manager, HR | 8.3 |
+| 35 | PUT | `/api/reimbursements/{id}` | owner, HR | optional |
+| 36 | PUT | `/api/reimbursements/{id}/decision` | HR | 8.4 |
+| 37 | DELETE | `/api/reimbursements/{id}` | owner, HR | optional |
+| 38 | GET | `/api/bonuses/{employeeId}?year` | self, manager, HR | 9.1 |
 
 ## Troubleshooting
 

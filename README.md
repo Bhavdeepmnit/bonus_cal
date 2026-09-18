@@ -175,6 +175,12 @@ Every `/api/**` call needs **HTTP Basic** auth with the employee's **email and p
 | GET | `/api/notifications?unreadOnly&page&size` | any | Own notifications (newest first) |
 | PUT | `/api/notifications/{id}/read` | owner | Mark one read |
 | PUT | `/api/notifications/read-all` | any | Mark all read → `{updated}` |
+| POST | `/api/reimbursements` | any | Submit a reimbursement request |
+| GET | `/api/reimbursements?page&size&sort` | self, manager, HR | List visible reimbursements |
+| GET | `/api/reimbursements/{id}` | self, manager, HR | View a reimbursement |
+| PUT | `/api/reimbursements/{id}` | owner, HR | Update a pending reimbursement |
+| PUT | `/api/reimbursements/{id}/decision` | HR | Approve or reject a reimbursement |
+| DELETE | `/api/reimbursements/{id}` | owner, HR | Delete a pending reimbursement |
 | GET | `/api/bonuses/{employeeId}?year` | self, manager, HR | Calculate an auditable yearly bonus report |
 
 ### Bonus calculation
@@ -197,6 +203,8 @@ bonusAmount = max(0,
 ```
 
 Rates can be overridden with the `BONUS_*` environment variables described in `src/main/resources/application.properties`. This is a sample policy for testing, not a payroll or statutory compensation rule.
+
+Reimbursements are submitted by the employee and approved or rejected by HR. Managers can view reimbursements for their direct reports but cannot decide them.
 
 Values:
 - `grade`: `L1`, `L2`, `L3`

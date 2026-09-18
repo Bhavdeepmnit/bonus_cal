@@ -22,6 +22,34 @@
       "value": "2026"
     },
     {
+      "key": "reimbursementId",
+      "value": ""
+    },
+    {
+      "key": "leaveRequestId",
+      "value": ""
+    },
+    {
+      "key": "approvalId",
+      "value": ""
+    },
+    {
+      "key": "policyId",
+      "value": ""
+    },
+    {
+      "key": "holidayId",
+      "value": ""
+    },
+    {
+      "key": "basicAuthUsername",
+      "value": "{{adminEmail}}"
+    },
+    {
+      "key": "basicAuthPassword",
+      "value": "{{adminPassword}}"
+    },
+    {
       "key": "wrongPassword",
       "value": "wrong-password"
     },
@@ -834,7 +862,8 @@
                   "const list = pm.response.json();",
                   "pm.test(\"9 policies\", () => pm.expect(list).to.have.length(9));",
                   "pm.collectionVariables.set(\"casualL1PolicyId\", list.find(p => p.grade === \"L1\" && p.leaveType === \"CASUAL\").id);",
-                  "pm.collectionVariables.set(\"earnedL3PolicyId\", list.find(p => p.grade === \"L3\" && p.leaveType === \"EARNED\").id);"
+                  "pm.collectionVariables.set(\"earnedL3PolicyId\", list.find(p => p.grade === \"L3\" && p.leaveType === \"EARNED\").id);",
+                  "pm.collectionVariables.set(\"policyId\", pm.collectionVariables.get(\"casualL1PolicyId\"));"
                 ]
               }
             }
@@ -1165,7 +1194,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"2.9: status is 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"christmasHolidayId\", pm.response.json().id);"
+                  "pm.collectionVariables.set(\"christmasHolidayId\", pm.response.json().id);",
+                  "pm.collectionVariables.set(\"holidayId\", pm.response.json().id);"
                 ]
               }
             }
@@ -1399,7 +1429,8 @@
                   "pm.test(\"3.3: status is 201\", () => pm.response.to.have.status(201));",
                   "pm.test(\".status = PENDING\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
                   "pm.test(\".days = 4\", () => pm.expect(pm.response.json().days).to.eql(4));",
-                  "pm.collectionVariables.set(\"casualLeaveId\", pm.response.json().id);"
+                  "pm.collectionVariables.set(\"casualLeaveId\", pm.response.json().id);",
+                  "pm.collectionVariables.set(\"leaveRequestId\", pm.response.json().id);"
                 ]
               }
             }
@@ -2146,6 +2177,7 @@
                   "const casualTask = tasks.find(t => t.leaveRequestId == pm.collectionVariables.get(\"casualLeaveId\"));",
                   "const earnedTask = tasks.find(t => t.leaveRequestId == pm.collectionVariables.get(\"earnedLeaveId\"));",
                   "pm.collectionVariables.set(\"casualTaskId\", casualTask.id);",
+                  "pm.collectionVariables.set(\"approvalId\", casualTask.id);",
                   "pm.collectionVariables.set(\"earnedTaskId\", earnedTask.id);",
                   "// tasks are created in order CASUAL, SICK, EARNED, so the cancelled SICK task id is between them",
                   "pm.collectionVariables.set(\"sickTaskId\", casualTask.id + 1);"
@@ -3117,21 +3149,186 @@
       ]
     },
     {
-      "name": "8. Bonus calculation",
-      "description": "Calculate the selected employee's yearly bonus from leave and reimbursement history.",
+      "name": "8. Reimbursements",
+      "description": "Create reimbursement as the employee, inspect it, then approve it as HR so the bonus calculation includes an approved amount.",
       "item": [
         {
-          "name": "8.1 Calculate employee bonus",
+          "name": "8.1 Employee creates reimbursement",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"8.1: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"8.1: status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"reimbursementId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reimbursements",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"travelType\": \"TRAIN\",\n  \"source\": \"Jaipur\",\n  \"destination\": \"Delhi\",\n  \"amount\": 1250.50\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.2 Employee lists reimbursement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"8.2: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"8.2: reimbursement is pending\", () => pm.expect(pm.response.json().content[0].status).to.eql(\"PENDING\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reimbursements",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{employeeEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{employeePassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.3 HR views reimbursement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"8.3: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"8.3: correct reimbursement is returned\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"reimbursementId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reimbursements/{{reimbursementId}}",
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.4 HR approves reimbursement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"8.4: status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"8.4: reimbursement is approved\", () => pm.expect(pm.response.json().status).to.eql(\"APPROVED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/reimbursements/{{reimbursementId}}/decision",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminEmail}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Bonus calculation",
+      "description": "Calculate the selected employee's yearly bonus from leave and reimbursement history.",
+      "item": [
+        {
+          "name": "9.1 Calculate employee bonus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"9.1: status is 200\", () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "pm.test(\"8.1: response identifies the employee and year\", () => { pm.expect(body.employeeId).to.eql(Number(pm.collectionVariables.get(\"employeeId\"))); pm.expect(body.year).to.eql(Number(pm.collectionVariables.get(\"bonusYear\"))); });",
-                  "pm.test(\"8.1: response contains auditable metrics\", () => { [\"appliedLeaveCount\", \"approvedLeaveDays\", \"rejectedLeaveCount\", \"pendingLeaveCount\", \"reimbursementCount\", \"approvedReimbursementAmount\", \"bonusAmount\"].forEach(key => pm.expect(body).to.have.property(key)); });"
+                  "pm.test(\"9.1: response identifies the employee and year\", () => { pm.expect(body.employeeId).to.eql(Number(pm.collectionVariables.get(\"employeeId\"))); pm.expect(body.year).to.eql(Number(pm.collectionVariables.get(\"bonusYear\"))); });",
+                  "pm.test(\"9.1: response contains auditable metrics\", () => { [\"appliedLeaveCount\", \"approvedLeaveDays\", \"rejectedLeaveCount\", \"pendingLeaveCount\", \"reimbursementCount\", \"approvedReimbursementAmount\", \"bonusAmount\"].forEach(key => pm.expect(body).to.have.property(key)); });",
+                  "pm.test(\"9.1: approved reimbursement is included\", () => pm.expect(body.approvedReimbursementCount).to.be.at.least(1));"
                 ]
               }
             }
