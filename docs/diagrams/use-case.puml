@@ -1,0 +1,66 @@
+@startuml use-case
+' UML use case diagram for the Leave Management system.
+' Render: VS Code "PlantUML" extension (Alt+D) or https://www.plantuml.com/plantuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Employee" as Employee
+actor "Manager" as Manager
+actor "HR" as HR
+
+Manager --|> Employee
+HR --|> Employee
+
+rectangle "Leave Management System" {
+  usecase "Log in" as UC01
+  usecase "View / change own\nprofile & password" as UC02
+  usecase "View leave policies\n& holidays" as UC03
+  usecase "Apply for leave" as UC04
+  usecase "View own leave requests" as UC05
+  usecase "View leave balance" as UC06
+  usecase "Cancel leave" as UC07
+  usecase "View / read notifications" as UC08
+
+  usecase "View team members" as UC10
+  usecase "View team leave,\nbalance & summary" as UC11
+  usecase "View pending approvals" as UC12
+  usecase "Approve / reject leave" as UC13
+
+  usecase "Manage employees\n(create, update, deactivate)" as UC20
+  usecase "Manage leave policies" as UC21
+  usecase "Manage holidays" as UC22
+  usecase "View any employee's leave" as UC23
+
+  usecase "Check policy & quota" as INC1
+  usecase "Count working days" as INC2
+  usecase "Create approval task" as INC3
+  usecase "Send notification" as INC4
+}
+
+Employee -- UC01
+Employee -- UC02
+Employee -- UC03
+Employee -- UC04
+Employee -- UC05
+Employee -- UC06
+Employee -- UC07
+Employee -- UC08
+
+Manager -- UC10
+Manager -- UC11
+Manager -- UC12
+Manager -- UC13
+
+HR -- UC20
+HR -- UC21
+HR -- UC22
+HR -- UC23
+
+UC04 ..> INC1 : <<include>>
+UC04 ..> INC2 : <<include>>
+UC04 ..> INC3 : <<include>>
+UC04 ..> INC4 : <<include>>
+UC13 ..> INC4 : <<include>>
+UC07 ..> INC4 : <<include>>
+@enduml

@@ -29,7 +29,7 @@ public class SecurityConfig {
             .exceptionHandling(e -> e.authenticationEntryPoint(errors).accessDeniedHandler(errors))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info", "/error",
-                    "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                    "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**").permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/api/employees/me").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/employees/me/password").authenticated()
