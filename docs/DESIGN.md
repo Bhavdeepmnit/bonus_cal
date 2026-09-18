@@ -15,6 +15,8 @@ The diagrams are written in [Mermaid](https://mermaid.js.org/). They render on G
 8. [ER diagram and data dictionary](#8-er-diagram-and-data-dictionary)
 9. [Viewing and exporting the diagrams](#9-viewing-and-exporting-the-diagrams)
 
+> **Complete runtime flow:** [diagrams/complete-system-flow.md](diagrams/complete-system-flow.md) shows startup, authentication, all feature paths, events, persistence, bonus calculation and request logging in one chart.
+
 ---
 
 ## 1. Overview

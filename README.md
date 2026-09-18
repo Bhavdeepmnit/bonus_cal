@@ -13,7 +13,7 @@ It started as three microservices (`leave-policy-service`, `leave-request-servic
 | Approvals | `approval` | `/api/approvals` |
 | Notifications | `notification` | `/api/notifications` |
 
-📐 **Design documentation:** [docs/DESIGN.md](docs/DESIGN.md) covers the agile backlog, use case diagram, process flows, state and sequence diagrams, ER diagram and data dictionary. Rendered images are in [docs/diagrams/](docs/diagrams/).
+📐 **Design documentation:** [docs/DESIGN.md](docs/DESIGN.md) covers the agile backlog, use case diagram, process flows, state and sequence diagrams, ER diagram and data dictionary. The complete runtime flow is in [docs/diagrams/complete-system-flow.md](docs/diagrams/complete-system-flow.md). Rendered images are in [docs/diagrams/](docs/diagrams/).
 
 Modules talk to each other through Spring events (`request/LeaveEvents`). For example, when leave is submitted, the approval module creates the manager's task and the notification module informs people, all in the same database transaction.
 
